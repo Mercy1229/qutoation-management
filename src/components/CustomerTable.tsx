@@ -149,14 +149,23 @@ export default function CustomerTable({ onEdit }: TableProps) {
 
   /* ---------- Preview HTML in new tab ---------- */
   const handlePreview = async (c: Row) => {
+    const previewWin = window.open("", "_blank", "width=1000,height=800,scrollbars=yes,resizable=yes");
+    if (!previewWin) {
+      alert("Popup blocked. Please allow popups.");
+      return;
+    }
+
+    previewWin.document.open();
+    previewWin.document.write("<html><head><title>Loading preview...</title></head><body style='font-family:Arial,sans-serif;padding:20px;'>Loading quotation preview...</body></html>");
+    previewWin.document.close();
+
     try {
       const html       = await previewQuotation(c);
-      const previewWin = window.open("", "_blank", "width=1000,height=800,scrollbars=yes,resizable=yes");
-      if (!previewWin) { alert("Popup blocked. Please allow popups."); return; }
       previewWin.document.open();
       previewWin.document.write(html);
       previewWin.document.close();
     } catch (err) {
+      previewWin.close();
       alert(err instanceof Error ? err.message : "Error previewing quotation");
     }
   };

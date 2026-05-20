@@ -18,7 +18,7 @@ type FormValues = {
   videoDeliverables: VideoDeliverable[];
   photoDeliverables: PhotoDeliverable[];
   totalPackage: number | string;
-  discount: number | string;
+  discount_percentage: number | string;
 };
 
 // Shared input className
@@ -277,16 +277,13 @@ function Step3({ control, watch }: { control: Control<FormValues>; watch: UseFor
  const totalPackage = Number(watch("totalPackage")) || 0;
 
 // discount entered as percentage
-const discountPercentage = Number(watch("discount")) || 0;
+const discountPercentage = Number(watch("discount_percentage")) || 0;
 
 // calculate discount amount
 const discountAmount = (totalPackage * discountPercentage) / 100;
 
 // final package value
 const packageValue = Math.max(0, totalPackage - discountAmount);
-  const events = watch("events") || [];
-  const eventNames = events.map((e: EventItem) => e.eventName).filter(Boolean);
-
   const theadCls = "px-2.5 py-2 text-white text-left text-[11px] font-semibold font-sans";
 
   return (
@@ -304,8 +301,8 @@ const packageValue = Math.max(0, totalPackage - discountAmount);
           <thead>
             <tr className="bg-[#a10018]">
               <th className={theadCls}>Video Deliverables</th>
-              <th className={`${theadCls} text-center w-16`}>Qty</th>
-              <th className={theadCls}>Event Name</th>
+              <th className={theadCls}>Event Name</th>            
+              <th className={theadCls}>Qty</th>
               <th className="w-9"></th>
             </tr>
           </thead>
@@ -316,18 +313,19 @@ const packageValue = Math.max(0, totalPackage - discountAmount);
                   <Controller name={`videoDeliverables.${i}.name`} control={control}
                     render={({ field }) => <input {...field} className={`${inputCls} py-1.5 text-[12px]`} placeholder="e.g. TRADITIONAL VIDEO" />} />
                 </td>
-                <td className="px-2 py-1.5 text-center">
-                  <Controller name={`videoDeliverables.${i}.qty`} control={control}
-                    render={({ field }) => <input type="number" min={1} {...field} className="w-14 px-2 py-1.5 border border-[#e0c0c5] rounded-md text-[12px] text-[#2a0008] text-center outline-none focus:border-[#a10018]" />} />
-                </td>
                 <td className="px-2 py-1.5">
                   <Controller name={`videoDeliverables.${i}.eventName`} control={control}
                     render={({ field }) => (
-                      <select {...field} className={`${inputCls} py-1.5 text-[12px] cursor-pointer`}>
-                        <option value="">Select event</option>
-                        {eventNames.map(e => <option key={e} value={e}>{e}</option>)}
-                      </select>
+                      <input
+                        {...field}
+                        className={`${inputCls} py-1.5 text-[12px]`}
+                        placeholder="Enter event name"
+                      />
                     )} />
+                </td>
+                                <td className="px-2 py-1.5 text-center">
+                  <Controller name={`videoDeliverables.${i}.qty`} control={control}
+                                    render={({ field }) => <input type="text" {...field} className="w-14 px-2 py-1.5 border border-[#e0c0c5] rounded-md text-[12px] text-[#2a0008] text-center outline-none focus:border-[#a10018]" />} />
                 </td>
                 <td className="text-center">
                   <button type="button" onClick={() => removeVideo(i)} className="text-[#b08090] hover:text-[#a10018] text-lg bg-transparent border-none cursor-pointer">×</button>
@@ -352,9 +350,9 @@ const packageValue = Math.max(0, totalPackage - discountAmount);
           <thead>
             <tr className="bg-[#a10018]">
               <th className={theadCls}>Photo Deliverables</th>
-              <th className={`${theadCls} text-center w-16`}>Qty</th>
-              <th className={`${theadCls} text-center w-24`}>Photos Count</th>
-              <th className={theadCls}>Event Name</th>
+              {/* <th className={`${theadCls} text-center w-24`}>Photos Count</th> */}
+              <th className={theadCls}>Event Name</th>             
+              <th className={theadCls}>Qty</th>
               <th className="w-9"></th>
             </tr>
           </thead>
@@ -365,22 +363,23 @@ const packageValue = Math.max(0, totalPackage - discountAmount);
                   <Controller name={`photoDeliverables.${i}.name`} control={control}
                     render={({ field }) => <input {...field} className={`${inputCls} py-1.5 text-[12px]`} placeholder="e.g. WEDDING ALBUM" />} />
                 </td>
-                <td className="px-2 py-1.5 text-center">
-                  <Controller name={`photoDeliverables.${i}.qty`} control={control}
-                    render={({ field }) => <input type="number" min={1} {...field} className="w-14 px-2 py-1.5 border border-[#e0c0c5] rounded-md text-[12px] text-[#2a0008] text-center outline-none focus:border-[#a10018]" />} />
-                </td>
-                <td className="px-2 py-1.5 text-center">
+                {/* <td className="px-2 py-1.5 text-center">
                   <Controller name={`photoDeliverables.${i}.photosCount`} control={control}
                     render={({ field }) => <input type="number" {...field} className="w-20 px-2 py-1.5 border border-[#e0c0c5] rounded-md text-[12px] text-[#2a0008] text-center outline-none focus:border-[#a10018]" placeholder="e.g. 500" />} />
-                </td>
+                </td> */}
                 <td className="px-2 py-1.5">
                   <Controller name={`photoDeliverables.${i}.eventName`} control={control}
                     render={({ field }) => (
-                      <select {...field} className={`${inputCls} py-1.5 text-[12px] cursor-pointer`}>
-                        <option value="">Select event</option>
-                        {eventNames.map(e => <option key={e} value={e}>{e}</option>)}
-                      </select>
+                      <input
+                        {...field}
+                        className={`${inputCls} py-1.5 text-[12px]`}
+                        placeholder="Enter event name"
+                      />
                     )} />
+                </td>
+                 <td className="px-2 py-1.5 text-center">
+                  <Controller name={`photoDeliverables.${i}.qty`} control={control}
+                    render={({ field }) => <input type="number" min={1} {...field} className="w-14 px-2 py-1.5 border border-[#e0c0c5] rounded-md text-[12px] text-[#2a0008] text-center outline-none focus:border-[#a10018]" />} />
                 </td>
                 <td className="text-center">
                   <button type="button" onClick={() => removePhoto(i)} className="text-[#b08090] hover:text-[#a10018] text-lg bg-transparent border-none cursor-pointer">×</button>
@@ -400,9 +399,9 @@ const packageValue = Math.max(0, totalPackage - discountAmount);
             <Controller name="totalPackage" control={control}
               render={({ field }) => <input type="number" {...field} className={`${inputCls} font-semibold`} placeholder="e.g. 751000" />} />
           </Field>
-          <Field label="Discount (₹)">
-            <Controller name="discount" control={control}
-              render={({ field }) => <input type="number" {...field} className={inputCls} placeholder="e.g. 191000" />} />
+          <Field label="Discount (%)">
+            <Controller name="discount_percentage" control={control}
+              render={({ field }) => <input type="number" {...field} className={inputCls} placeholder="e.g. 10" />} />
           </Field>
         </div>
         <div className="bg-white border-[1.5px] border-[#f5c6ce] rounded-xl p-5 space-y-3">
@@ -496,21 +495,25 @@ export default function CustomerForm({ onSaved, editData }: { onSaved?: () => vo
       videoDeliverables: editData.videoDeliverables ?? [{ name: "TRADITIONAL VIDEO", qty: 1, eventName: "" }],
       photoDeliverables: editData.photoDeliverables ?? [{ name: "WEDDING ALBUM", qty: 1, photosCount: "", eventName: "" }],
       totalPackage:      editData.totalPackage ?? "",
-      discount:          editData.discount ?? "",
+      discount_percentage:
+        editData.discount_percentage ??
+        ((Number(editData.totalPackage) || 0) > 0
+          ? ((Number(editData.discount) || 0) / Number(editData.totalPackage)) * 100
+          : ""),
     } : {
       customerName: "", eventType: "", eventDate: "", location: "",
       brideName: "", groomName: "", notes: "",
       events: [{ eventName: "", venueName: "", venueLocation: "", date: "", startTime: "", endTime: "", crowdStrength: "", services: [{ service: "CANDID PHOTOGRAPHY", cameras: 1 }] }],
       videoDeliverables: [{ name: "TRADITIONAL VIDEO", qty: 1, eventName: "" }],
       photoDeliverables: [{ name: "WEDDING ALBUM", qty: 1, photosCount: "", eventName: "" }],
-      totalPackage: "", discount: "",
+      totalPackage: "", discount_percentage: "",
     }
   });
 
   const stepFields: Record<number, (keyof FormValues)[]> = {
     0: ["customerName", "eventType", "eventDate", "location", "brideName", "groomName", "notes"],
     1: ["events"],
-    2: ["videoDeliverables", "photoDeliverables", "totalPackage", "discount"],
+    2: ["videoDeliverables", "photoDeliverables", "totalPackage", "discount_percentage"],
   };
 
   const handleNext = async () => {
@@ -531,8 +534,9 @@ export default function CustomerForm({ onSaved, editData }: { onSaved?: () => vo
   const onSubmit = async (data: FormValues) => {
     try {
       const totalPackageNum = Math.max(0, Number(data.totalPackage) || 0);
-      const discountNum     = Math.max(0, Number(data.discount) || 0);
-      const total           = Math.max(0, totalPackageNum - discountNum);
+      const discountPercentageNum = Math.max(0, Number(data.discount_percentage) || 0);
+      const discountNum = (totalPackageNum * discountPercentageNum) / 100;
+      const total = Math.max(0, totalPackageNum - discountNum);
       const eventDate       = data.eventDate || data.events?.[0]?.date || "";
 
       const payload: CustomerData = {
@@ -554,6 +558,7 @@ export default function CustomerForm({ onSaved, editData }: { onSaved?: () => vo
         photoDeliverables: data.photoDeliverables.map(p => ({ name: p.name, qty: Number(p.qty) || 1, photosCount: Number(p.photosCount) || 0, eventName: p.eventName })),
         totalPackage: totalPackageNum,
         discount:     discountNum,
+        discount_percentage: discountPercentageNum,
         total,
       };
 

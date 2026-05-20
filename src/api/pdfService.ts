@@ -44,6 +44,7 @@ export interface CustomerData {
   photoDeliverables?: PhotoDeliverable[];
   totalPackage?: number;
   discount?: number;
+  discount_percentage?: number;
   total: number;
   advancePaid?: number;
   notes?: string;
