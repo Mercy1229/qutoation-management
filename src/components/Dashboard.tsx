@@ -6,6 +6,7 @@ import type { CustomerData } from "@/api/pdfService";
 
 type EditData = CustomerData & { _id?: string };
 
+// const SERVER = "https://quotation-management-be.onrender.com";
 const SERVER = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 export default function Dashboard() {

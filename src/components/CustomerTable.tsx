@@ -7,7 +7,7 @@ import {
   deleteCustomer,
 } from "@/api/pdfService";
 import CustomerDetailDialog from "./CustomerDetailDialog";
-import { Download, MoreVertical, Eye, Pencil, Trash2, FileText } from "lucide-react";
+import { Download, MoreVertical, Eye, Pencil, Trash2, FileText, Share2 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /* Styles / constants                                                   */
@@ -26,9 +26,10 @@ interface MenuProps {
   onPreview: () => void;
   onEdit:    () => void;
   onDelete:  () => void;
+  onShare:   () => void;
 }
 
-function MoreMenu({ onView, onPreview, onEdit, onDelete }: MenuProps) {
+function MoreMenu({ onView, onPreview, onEdit, onDelete, onShare }: MenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -97,7 +98,10 @@ function MoreMenu({ onView, onPreview, onEdit, onDelete }: MenuProps) {
           {item("Edit",    <Pencil   size={15} />, "#2a7a2a", onEdit)}
           <div style={{ height: 1, background: BRAND_MID, margin: "0 10px" }} />
           {item("Delete",  <Trash2   size={15} />, BRAND,     onDelete)}
+          <div style={{ height: 1, background: BRAND_MID, margin: "0 10px" }} />
+          {item("Share",   <Share2   size={15} />, "#7a4500", onShare)}
         </div>
+         
       )}
     </div>
   );
@@ -169,7 +173,16 @@ export default function CustomerTable({ onEdit }: TableProps) {
       alert(err instanceof Error ? err.message : "Error previewing quotation");
     }
   };
-
+const handleShare = async (c: Row) => {
+  if (!c._id) { alert("Cannot share: record has no ID."); return; }
+  const url = `${window.location.origin}/preview/${c._id}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    alert("Preview link copied to clipboard!");
+  } catch {
+    prompt("Copy this link:", url);
+  }
+};
   /* ---------- Delete ---------- */
   const handleDelete = async (c: Row) => {
     if (!c._id) { alert("Cannot delete: record has no ID."); return; }
@@ -300,6 +313,7 @@ export default function CustomerTable({ onEdit }: TableProps) {
                         onPreview={() => handlePreview(row)}
                         onEdit={()    => handleEdit(row)}
                         onDelete={()  => handleDelete(row)}
+                        onShare={()   => handleShare(row)}
                       />
                     </div>
                   </td>

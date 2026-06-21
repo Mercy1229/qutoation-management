@@ -1,5 +1,6 @@
 import axios from "axios";
 
+// const API_BASE = "https://quotation-management-be.onrender.com";
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 export interface EventService {
@@ -67,6 +68,10 @@ export async function saveCustomer(data: CustomerData) {
 
 export async function fetchCustomers() {
   const resp = await axios.get(`${API_BASE}/api/customers`);
+  return resp.data;
+}
+export async function fetchCustomerById(id: string) {
+  const resp = await axios.get(`${API_BASE}/api/customers/${id}`);
   return resp.data;
 }
 

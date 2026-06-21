@@ -1,14 +1,15 @@
 import { type ReactNode, useState } from "react";
-import { useForm, Controller, useFieldArray, type Control, type FieldErrors, type UseFormWatch } from "react-hook-form";
+import { useForm, Controller, useFieldArray, type Control, type FieldErrors, type UseFormSetValue, type UseFormWatch } from "react-hook-form";
 import type { CustomerData } from "@/api/pdfService";
 import { saveCustomer, updateCustomer } from "@/api/pdfService";
 
 type EditData = CustomerData & { _id?: string };
 
 const steps = ["Customer Details", "Event Details", "Deliverables & Pricing"];
+const eventNameOptions = ["Engagement", "Wedding", "Reception", "Haldi", "Mehndi", "Sangeet"] as const;
 
 type EventService = { service: string; cameras: number | string };
-type EventItem = { eventName: string; venueName: string; venueLocation: string; date: string; startTime: string; endTime: string; crowdStrength: number | string; services: EventService[] };
+type EventItem = { eventName: string; customEventName?: string; venueName: string; venueLocation: string; date: string; startTime: string; endTime: string; crowdStrength: number | string; services: EventService[] };
 type VideoDeliverable = { name: string; qty: number | string; eventName: string };
 type PhotoDeliverable = { name: string; qty: number | string; photosCount: number | string; eventName: string };
 type FormValues = {
@@ -127,7 +128,7 @@ function Step1({ control, errors }: { control: Control<FormValues>; errors: Fiel
 
 function ServicesTable({ control, eventIndex }: { control: Control<FormValues>; eventIndex: number }) {
   const { fields, append, remove } = useFieldArray({ control, name: `events.${eventIndex}.services` });
-  const serviceOptions = ["CANDID PHOTOGRAPHY", "CANDID VIDEOGRAPHY", "TRADITIONAL VIDEOGRAPHY", "TRADITIONAL PHOTOGRAPHY", "DRONE COVERAGE", "ALBUM DESIGN", "HIGHLIGHT VIDEO", "TEASER VIDEO"];
+  const serviceOptions = ["CANDID PHOTOGRAPHY", "CANDID VIDEOGRAPHY", "TRADITIONAL VIDEOGRAPHY", "TRADITIONAL PHOTOGRAPHY", "DRONE COVERAGE", "ALBUM DESIGN", "HIGHLIGHT VIDEO", "TEASER VIDEO","LED WALL (12x8)", "LIVE STREAMING"] as const;
 
   return (
     <div>
@@ -182,7 +183,7 @@ function ServicesTable({ control, eventIndex }: { control: Control<FormValues>; 
     </div>
   );
 }
-function Step2({ control }: { control: Control<FormValues> }) {
+function Step2({ control, setValue }: { control: Control<FormValues>; setValue: UseFormSetValue<FormValues> }) {
   const { fields, append, remove } = useFieldArray({ control, name: "events" });
 
   return (
@@ -208,14 +209,53 @@ function Step2({ control }: { control: Control<FormValues> }) {
               <Field label="Event Name">
                 <Controller name={`events.${index}.eventName`} control={control}
                   render={({ field }) => (
-                    <select {...field} className={`${inputCls} cursor-pointer`}>
+                    <select
+                      {...field}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value);
+                        if (value !== "Other") {
+                          setValue(`events.${index}.customEventName`, "");
+                        }
+                      }}
+                      className={`${inputCls} cursor-pointer`}
+                    >
                       <option value="">Select event</option>
-                      {["Engagement", "Wedding", "Reception", "Haldi", "Mehndi", "Sangeet", "Other"].map(e => (
+                      {eventNameOptions.map(e => (
                         <option key={e} value={e}>{e}</option>
                       ))}
+                      <option value="Other">Other</option>
                     </select>
                   )} />
               </Field>
+
+              <Controller
+                name={`events.${index}.eventName`}
+                control={control}
+                render={({ field: eventField }) => (
+                  eventField.value === "Other" ? (
+                    <Field label="Custom Event Name *">
+                      <Controller
+                        name={`events.${index}.customEventName`}
+                        control={control}
+                        rules={{
+                          validate: (value) => {
+                            if (eventField.value !== "Other") return true;
+                            return (value ?? "").trim().length > 0 || "Enter event name";
+                          },
+                        }}
+                        render={({ field }) => (
+                          <input
+                            {...field}
+                            className={inputCls}
+                            placeholder="Enter event name"
+                          />
+                        )}
+                      />
+                    </Field>
+                  ) : <></>
+                )}
+              />
 
               <Field label="Venue Name">
                 <Controller name={`events.${index}.venueName`} control={control}
@@ -262,7 +302,7 @@ function Step2({ control }: { control: Control<FormValues> }) {
       ))}
 
       <button type="button"
-        onClick={() => append({ eventName: "", venueName: "", venueLocation: "", date: "", startTime: "", endTime: "", crowdStrength: "", services: [{ service: "CANDID PHOTOGRAPHY", cameras: 1 }] })}
+        onClick={() => append({ eventName: "", customEventName: "", venueName: "", venueLocation: "", date: "", startTime: "", endTime: "", crowdStrength: "", services: [{ service: "CANDID PHOTOGRAPHY", cameras: 1 }] })}
         className="w-full py-2.5 border-[1.5px] border-dashed border-[#a10018] rounded-lg bg-[#fdf0f2] text-[#a10018] font-sans font-semibold text-[13px] cursor-pointer tracking-wide hover:bg-[#f5c6ce]/40 transition-colors">
         + Add Another Event
       </button>
@@ -477,7 +517,7 @@ export default function CustomerForm({ onSaved, editData }: { onSaved?: () => vo
     return isNaN(dt.getTime()) ? "" : dt.toISOString().slice(0, 10);
   };
 
-  const { control, handleSubmit, trigger, watch, formState: { errors } } = useForm<FormValues>({
+  const { control, handleSubmit, trigger, watch, setValue, formState: { errors } } = useForm<FormValues>({
     defaultValues: editData ? {
       customerName:      editData.customerName ?? "",
       eventType:         editData.eventType ?? "",
@@ -488,10 +528,12 @@ export default function CustomerForm({ onSaved, editData }: { onSaved?: () => vo
       notes:             editData.notes ?? "",
       events:            editData.events?.map(ev => ({
         ...ev,
+        eventName:     eventNameOptions.includes(ev.eventName as typeof eventNameOptions[number]) ? ev.eventName : "Other",
+        customEventName: eventNameOptions.includes(ev.eventName as typeof eventNameOptions[number]) ? "" : (ev.eventName ?? ""),
         date:          toDateInput(ev.date),
         crowdStrength: ev.crowdStrength ?? "",
         services:      ev.services ?? [{ service: "CANDID PHOTOGRAPHY", cameras: 1 }],
-      })) ?? [{ eventName: "", venueName: "", venueLocation: "", date: "", startTime: "", endTime: "", crowdStrength: "", services: [{ service: "CANDID PHOTOGRAPHY", cameras: 1 }] }],
+      })) ?? [{ eventName: "", customEventName: "", venueName: "", venueLocation: "", date: "", startTime: "", endTime: "", crowdStrength: "", services: [{ service: "CANDID PHOTOGRAPHY", cameras: 1 }] }],
       videoDeliverables: editData.videoDeliverables ?? [{ name: "TRADITIONAL VIDEO", qty: 1, eventName: "" }],
       photoDeliverables: editData.photoDeliverables ?? [{ name: "WEDDING ALBUM", qty: 1, photosCount: "", eventName: "" }],
       totalPackage:      editData.totalPackage ?? "",
@@ -503,7 +545,7 @@ export default function CustomerForm({ onSaved, editData }: { onSaved?: () => vo
     } : {
       customerName: "", eventType: "", eventDate: "", location: "",
       brideName: "", groomName: "", notes: "",
-      events: [{ eventName: "", venueName: "", venueLocation: "", date: "", startTime: "", endTime: "", crowdStrength: "", services: [{ service: "CANDID PHOTOGRAPHY", cameras: 1 }] }],
+      events: [{ eventName: "", customEventName: "", venueName: "", venueLocation: "", date: "", startTime: "", endTime: "", crowdStrength: "", services: [{ service: "CANDID PHOTOGRAPHY", cameras: 1 }] }],
       videoDeliverables: [{ name: "TRADITIONAL VIDEO", qty: 1, eventName: "" }],
       photoDeliverables: [{ name: "WEDDING ALBUM", qty: 1, photosCount: "", eventName: "" }],
       totalPackage: "", discount_percentage: "",
@@ -549,7 +591,7 @@ export default function CustomerForm({ onSaved, editData }: { onSaved?: () => vo
         groomName:    data.groomName,
         notes:        data.notes,
         events: data.events.map(ev => ({
-          eventName: ev.eventName, venueName: ev.venueName, venueLocation: ev.venueLocation,
+          eventName: ev.eventName === "Other" ? (ev.customEventName?.trim() || "Other") : ev.eventName, venueName: ev.venueName, venueLocation: ev.venueLocation,
           date: ev.date, startTime: ev.startTime, endTime: ev.endTime,
           crowdStrength: Number(ev.crowdStrength) || 0,
           services: ev.services.map(s => ({ service: s.service, cameras: Number(s.cameras) || 1 })),
@@ -601,7 +643,7 @@ export default function CustomerForm({ onSaved, editData }: { onSaved?: () => vo
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto px-7">
             {currentStep === 0 && <Step1 control={control} errors={errors} />}
-            {currentStep === 1 && <Step2 control={control} />}
+            {currentStep === 1 && <Step2 control={control} setValue={setValue} />}
             {currentStep === 2 && <Step3 control={control} watch={watch} />}
           </div>
 
