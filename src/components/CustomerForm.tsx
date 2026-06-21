@@ -128,7 +128,7 @@ function Step1({ control, errors }: { control: Control<FormValues>; errors: Fiel
 
 function ServicesTable({ control, eventIndex }: { control: Control<FormValues>; eventIndex: number }) {
   const { fields, append, remove } = useFieldArray({ control, name: `events.${eventIndex}.services` });
-  const serviceOptions = ["CANDID PHOTOGRAPHY", "CANDID VIDEOGRAPHY", "TRADITIONAL VIDEOGRAPHY", "TRADITIONAL PHOTOGRAPHY", "DRONE COVERAGE", "ALBUM DESIGN", "HIGHLIGHT VIDEO", "TEASER VIDEO","LED WALL (12x8)", "LIVE STREAMING"] as const;
+  const serviceOptions = ["CANDID PHOTOGRAPHY", "CANDID VIDEOGRAPHY","SEMI CANDID PHOTOGRAPHY", "SEMI CANDID VIDEOGRAPHY", "TRADITIONAL VIDEOGRAPHY", "TRADITIONAL PHOTOGRAPHY", "DRONE COVERAGE", "ALBUM DESIGN", "HIGHLIGHT VIDEO", "TEASER VIDEO","LED WALL (12x8)", "LIVE STREAMING"] as const;
 
   return (
     <div>
