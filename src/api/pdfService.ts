@@ -33,6 +33,7 @@ export interface PhotoDeliverable {
 }
 
 export interface CustomerData {
+  templateId?: string | number;
   customerName: string;
   eventType: string;
   packageName: string;
@@ -75,8 +76,15 @@ export async function fetchCustomerById(id: string) {
   return resp.data;
 }
 
-export async function previewQuotation(data: CustomerData) {
-  const resp = await axios.post(`${API_BASE}/api/preview-quotation`, { data }, {
+function normalizeTemplateId(templateId?: string | number) {
+  const normalized = String(templateId ?? "").trim().toLowerCase();
+  return normalized === "2" || normalized === "template2" ? "template2" : "template1";
+}
+
+export async function previewQuotation(data: CustomerData, templateId?: string | number) {
+  const resolvedTemplateId = normalizeTemplateId(templateId ?? data.templateId);
+
+  const resp = await axios.post(`${API_BASE}/api/preview-quotation`, { data, templateId: resolvedTemplateId }, {
     responseType: "text",
     validateStatus: () => true,
   });
@@ -100,7 +108,9 @@ export async function deleteCustomer(id: string) {
 }
 
 export async function generatePdf(data: CustomerData) {
-  const resp = await axios.post(`${API_BASE}/api/generate-pdf`, { data }, {
+  const templateId = normalizeTemplateId(data.templateId);
+
+  const resp = await axios.post(`${API_BASE}/api/generate-pdf`, { data, templateId }, {
     responseType: "blob",
     validateStatus: () => true,
   });

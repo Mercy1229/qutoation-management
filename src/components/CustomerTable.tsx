@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import type { CustomerData } from "@/api/pdfService";
 import {
   fetchCustomers,
-  generatePdf,
-  previewQuotation,
   deleteCustomer,
 } from "@/api/pdfService";
 import CustomerDetailDialog from "./CustomerDetailDialog";
-import { Download, MoreVertical, Eye, Pencil, Trash2, FileText, Share2 } from "lucide-react";
+import { MoreVertical, Eye, Pencil, Trash2, FileText, Share2, Copy, ExternalLink } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 /* ------------------------------------------------------------------ */
 /* Styles / constants                                                   */
@@ -118,7 +120,12 @@ export default function CustomerTable({ onEdit }: TableProps) {
   const [rows,        setRows]        = useState<Row[]>([]);
   const [detail,      setDetail]      = useState<Row | null>(null);
   const [deleting,    setDeleting]    = useState<string | null>(null);
-  const [downloading, setDownloading] = useState<string | null>(null);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareTarget, setShareTarget] = useState<Row | null>(null);
+  const [dialogMode, setDialogMode] = useState<"share" | "preview">("share");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<"template1" | "template2">("template1");
+  const [shareLink, setShareLink] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const load = async () => {
     try {
@@ -131,57 +138,59 @@ export default function CustomerTable({ onEdit }: TableProps) {
 
   useEffect(() => { load(); }, []);
 
-  /* ---------- Download PDF ---------- */
-  const handleDownload = async (c: Row) => {
-    setDownloading(c._id ?? c.customerName);
-    try {
-      const blob = await generatePdf(c);
-      const url  = window.URL.createObjectURL(blob);
-      const a    = document.createElement("a");
-      a.href     = url;
-      a.download = `quotation_${c.customerName}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Error generating PDF");
-    } finally {
-      setDownloading(null);
+  const normalizeTemplateId = (rawTemplateId?: string | number): "template1" | "template2" => {
+    const normalized = String(rawTemplateId ?? "").trim().toLowerCase();
+    return normalized === "2" || normalized === "template2" ? "template2" : "template1";
+  };
+
+  const buildPreviewLink = (c: Row, templateId: "template1" | "template2") => {
+    if (!c._id) return "";
+    return `${window.location.origin}/preview/${c._id}?templateId=${encodeURIComponent(templateId)}`;
+  };
+
+  const openShareDialog = (c: Row) => {
+    const template = normalizeTemplateId(c.templateId);
+    setShareTarget(c);
+    setDialogMode("share");
+    setSelectedTemplateId(template);
+    setShareLink(buildPreviewLink(c, template));
+    setCopied(false);
+    setShareDialogOpen(true);
+  };
+
+  const openPreviewDialog = (c: Row) => {
+    const template = normalizeTemplateId(c.templateId);
+    setShareTarget(c);
+    setDialogMode("preview");
+    setSelectedTemplateId(template);
+    setShareLink(buildPreviewLink(c, template));
+    setCopied(false);
+    setShareDialogOpen(true);
+  };
+
+  const updateTemplateSelection = (value: string) => {
+    const template = value === "template2" ? "template2" : "template1";
+    setSelectedTemplateId(template);
+    if (shareTarget) {
+      setShareLink(buildPreviewLink(shareTarget, template));
+      setCopied(false);
     }
   };
 
-  /* ---------- Preview HTML in new tab ---------- */
+  const handleCopyShareLink = async () => {
+    if (!shareLink) return;
+    await navigator.clipboard.writeText(shareLink);
+    setCopied(true);
+  };
+
+  /* ---------- Preview ---------- */
   const handlePreview = async (c: Row) => {
-    const previewWin = window.open("", "_blank", "width=1000,height=800,scrollbars=yes,resizable=yes");
-    if (!previewWin) {
-      alert("Popup blocked. Please allow popups.");
-      return;
-    }
-
-    previewWin.document.open();
-    previewWin.document.write("<html><head><title>Loading preview...</title></head><body style='font-family:Arial,sans-serif;padding:20px;'>Loading quotation preview...</body></html>");
-    previewWin.document.close();
-
-    try {
-      const html       = await previewQuotation(c);
-      previewWin.document.open();
-      previewWin.document.write(html);
-      previewWin.document.close();
-    } catch (err) {
-      previewWin.close();
-      alert(err instanceof Error ? err.message : "Error previewing quotation");
-    }
+    if (!c._id) return;
+    openPreviewDialog(c);
   };
 const handleShare = async (c: Row) => {
-  if (!c._id) { alert("Cannot share: record has no ID."); return; }
-  const url = `${window.location.origin}/preview/${c._id}`;
-  try {
-    await navigator.clipboard.writeText(url);
-    alert("Preview link copied to clipboard!");
-  } catch {
-    prompt("Copy this link:", url);
-  }
+  if (!c._id) return;
+  openShareDialog(c);
 };
   /* ---------- Delete ---------- */
   const handleDelete = async (c: Row) => {
@@ -250,7 +259,6 @@ const handleShare = async (c: Row) => {
             {rows.map((row, i) => {
               const balance = (row as unknown as Record<string, number>)["balanceAmount"] ?? (row.total - (row.advancePaid ?? 0));
               const isDel   = deleting   === (row._id ?? row.customerName);
-              const isDl    = downloading === (row._id ?? row.customerName);
 
               return (
                 <tr
@@ -287,24 +295,42 @@ const handleShare = async (c: Row) => {
                   {/* Actions */}
                   <td style={{ padding: "8px 14px", whiteSpace: "nowrap" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "flex-end" }}>
-                      {/* Download button */}
+                      {/* Download button (hidden for now) */}
+                      {/*
                       <button
                         onClick={() => handleDownload(row)}
-                        disabled={isDl}
                         title="Download PDF"
                         style={{
                           display: "flex", alignItems: "center", gap: 5,
                           padding: "5px 11px", borderRadius: 6,
                           border: `1.5px solid ${BRAND}`,
-                          background: isDl ? BRAND_LIGHT : BRAND,
-                          color: isDl ? BRAND : "#fff",
-                          cursor: isDl ? "not-allowed" : "pointer",
+                          background: BRAND,
+                          color: "#fff",
+                          cursor: "pointer",
                           fontSize: 12, fontFamily: "'Montserrat', sans-serif", fontWeight: 600,
                           letterSpacing: "0.04em", transition: "all 0.15s",
                         }}
                       >
-                        {isDl ? <span style={{ fontSize: 12 }}>…</span> : <Download size={13} />}
-                        {isDl ? "Generating" : "PDF"}
+                        PDF
+                      </button>
+                      */}
+
+                      <button
+                        onClick={() => openShareDialog(row)}
+                        title="Share"
+                        style={{
+                          display: "flex", alignItems: "center", gap: 5,
+                          padding: "5px 11px", borderRadius: 6,
+                          border: `1.5px solid ${BRAND}`,
+                          background: BRAND,
+                          color: "#fff",
+                          cursor: "pointer",
+                          fontSize: 12, fontFamily: "'Montserrat', sans-serif", fontWeight: 600,
+                          letterSpacing: "0.04em", transition: "all 0.15s",
+                        }}
+                      >
+                        <Share2 size={13} />
+                        Share
                       </button>
 
                       {/* Vertical dots menu */}
@@ -323,6 +349,79 @@ const handleShare = async (c: Row) => {
           </tbody>
         </table>
       </div>
+
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="sm:max-w-[560px] border-[#f5c6ce]">
+          <DialogHeader>
+            <DialogTitle className="text-[#a10018]">
+              {dialogMode === "share" ? "Share Quotation Link" : "Preview Quotation"}
+            </DialogTitle>
+            <DialogDescription>
+              {dialogMode === "share"
+                ? "Choose template and copy the preview link to share with customer."
+                : "Choose template and open the preview based on selected template."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold tracking-wider uppercase text-[#a10018]">Template</p>
+              <Select value={selectedTemplateId} onValueChange={updateTemplateSelection}>
+                <SelectTrigger className="w-full border-[#e0c0c5]">
+                  <SelectValue placeholder="Select template" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="template1">Template 1</SelectItem>
+                  <SelectItem value="template2">Template 2</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold tracking-wider uppercase text-[#a10018]">Share Link</p>
+              <div className="flex gap-2">
+                <Input value={shareLink} readOnly className="border-[#e0c0c5]" />
+                <Button type="button" onClick={handleCopyShareLink} className="bg-[#a10018] hover:bg-[#8a0014]">
+                  <Copy className="size-4" />
+                  {copied ? "Copied" : "Copy"}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShareDialogOpen(false)}>
+              Close
+            </Button>
+            {dialogMode === "share" && (
+              <Button
+                type="button"
+                className="bg-[#a10018] hover:bg-[#8a0014]"
+                onClick={() => {
+                  if (!shareLink) return;
+                  window.open(shareLink, "_blank", "noopener,noreferrer");
+                }}
+              >
+                <ExternalLink className="size-4" />
+                Open Link
+              </Button>
+            )}
+            {dialogMode === "preview" && (
+              <Button
+                type="button"
+                className="bg-[#a10018] hover:bg-[#8a0014]"
+                onClick={() => {
+                  if (!shareLink) return;
+                  window.open(shareLink, "_blank", "noopener,noreferrer");
+                }}
+              >
+                <ExternalLink className="size-4" />
+                Open Preview
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

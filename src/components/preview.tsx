@@ -9,6 +9,7 @@ export default function QuotationPreviewPage() {
   const [html, setHtml]       = useState<string | null>(null);
   const [error, setError]     = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const templateIdFromQuery = new URLSearchParams(window.location.search).get("templateId") || "template1";
 
   useEffect(() => {
     if (!id) {
@@ -24,7 +25,7 @@ export default function QuotationPreviewPage() {
         setLoading(true);
         setError(null);
         const customer = await fetchCustomerById(id);
-        const previewHtml = await previewQuotation(customer.data);
+        const previewHtml = await previewQuotation(customer.data, templateIdFromQuery);
         if (!cancelled) setHtml(previewHtml);
       } catch (err) {
         if (!cancelled) {
@@ -36,7 +37,7 @@ export default function QuotationPreviewPage() {
     })();
 
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, templateIdFromQuery]);
 
   /* ---------- Loading state ---------- */
   if (loading) {
