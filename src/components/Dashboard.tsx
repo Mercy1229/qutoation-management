@@ -43,13 +43,7 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Text-logo image — hidden via onError if file is missing */}
-            {/* <img
-              src={`${SERVER}/uploads/logo-text.png`}
-              alt="Yours Bigday"
-              className="h-9 w-auto object-contain"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-            /> */}
+            
 
             <div className="leading-tight">
               <h1 className="text-[22px] font-light tracking-wide text-[#9b0015]">
