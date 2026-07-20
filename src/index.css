@@ -4,6 +4,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --font-sans: "Noto Serif", "Tamil MN", serif;
+  --font-serif: "Noto Serif", "Tamil MN", serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -113,8 +115,10 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    font-family: "Noto Serif", "Tamil MN", serif;
   }
   body {
     @apply bg-background text-foreground;
+    font-family: "Noto Serif", "Tamil MN", serif;
   }
 }

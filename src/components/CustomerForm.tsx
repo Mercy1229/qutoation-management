@@ -8,18 +8,18 @@ type EditData = CustomerData & { _id?: string };
 const steps = ["Customer Details", "Event Details", "Deliverables & Pricing"];
 const eventNameOptions = ["Engagement", "Wedding", "Reception", "Haldi", "Mehndi", "Sangeet"] as const;
 
-type EventService = { service: string; cameras: number | string };
-type EventItem = { eventName: string; customEventName?: string; venueName: string; venueLocation: string; date: string; startTime: string; endTime: string; crowdStrength: number | string; services: EventService[] };
-type VideoDeliverable = { name: string; qty: number | string; eventName: string };
-type PhotoDeliverable = { name: string; qty: number | string; photosCount: number | string; eventName: string };
+type EventService = { service: string; cameras: string };
+type EventItem = { eventName: string; customEventName?: string; venueName: string; venueLocation: string; date: string; startTime: string; endTime: string; crowdStrength: string; services: EventService[] };
+type VideoDeliverable = { name: string; qty: string; eventName: string };
+type PhotoDeliverable = { name: string; qty: string; photosCount: string; eventName: string };
 type FormValues = {
   customerName: string; eventType: string; eventDate: string; location: string;
   brideName: string; groomName: string; notes: string;
   events: EventItem[];
   videoDeliverables: VideoDeliverable[];
   photoDeliverables: PhotoDeliverable[];
-  totalPackage: number | string;
-  discount_percentage: number | string;
+  totalPackage: string;
+  discount_percentage: string;
 };
 
 // Shared input className
@@ -157,7 +157,7 @@ function ServicesTable({ control, eventIndex }: { control: Control<FormValues>; 
                 <td className="px-2 py-1.5 text-center">
                   <Controller name={`events.${eventIndex}.services.${si}.cameras`} control={control}
                     render={({ field }) => (
-                      <input type="number" min={1} {...field} className="w-16 px-2 py-1.5 border border-[#e0c0c5] rounded-md text-[12px] text-[#2a0008] bg-white text-center outline-none focus:border-[#a10018]" />
+                      <input type="text" {...field} className="w-16 px-2 py-1.5 border border-[#e0c0c5] rounded-md text-[12px] text-[#2a0008] bg-white text-center outline-none focus:border-[#a10018]" />
                     )} />
                 </td>
                 <td className="px-1 py-1.5 text-center">
@@ -175,7 +175,7 @@ function ServicesTable({ control, eventIndex }: { control: Control<FormValues>; 
       </div>
       <button
         type="button"
-        onClick={() => append({ service: "CANDID PHOTOGRAPHY", cameras: 1 })}
+        onClick={() => append({ service: "CANDID PHOTOGRAPHY", cameras: "1" })}
         className="mt-2 px-4 py-1.5 border border-[#a10018] rounded-md bg-transparent text-[#a10018] text-[12px] font-semibold font-sans tracking-wide cursor-pointer hover:bg-[#fdf0f2] transition-colors"
       >
         + Add Service
@@ -284,7 +284,7 @@ function Step2({ control, setValue }: { control: Control<FormValues>; setValue: 
 
               <Field label="Crowd Strength">
                 <Controller name={`events.${index}.crowdStrength`} control={control}
-                  render={({ field }) => <input type="number" {...field} className={inputCls} placeholder="e.g. 300" />} />
+                  render={({ field }) => <input type="text" {...field} className={inputCls} placeholder="e.g. 300" />} />
               </Field>
             </div>
 
@@ -302,7 +302,7 @@ function Step2({ control, setValue }: { control: Control<FormValues>; setValue: 
       ))}
 
       <button type="button"
-        onClick={() => append({ eventName: "", customEventName: "", venueName: "", venueLocation: "", date: "", startTime: "", endTime: "", crowdStrength: "", services: [{ service: "CANDID PHOTOGRAPHY", cameras: 1 }] })}
+        onClick={() => append({ eventName: "", customEventName: "", venueName: "", venueLocation: "", date: "", startTime: "", endTime: "", crowdStrength: "", services: [{ service: "CANDID PHOTOGRAPHY", cameras: "1" }] })}
         className="w-full py-2.5 border-[1.5px] border-dashed border-[#a10018] rounded-lg bg-[#fdf0f2] text-[#a10018] font-sans font-semibold text-[13px] cursor-pointer tracking-wide hover:bg-[#f5c6ce]/40 transition-colors">
         + Add Another Event
       </button>
@@ -332,7 +332,7 @@ const packageValue = Math.max(0, totalPackage - discountAmount);
       <div className="mb-7">
         <div className="flex justify-between items-center mb-2.5">
           <h3 className="text-[13px] font-bold text-[#a10018] font-sans tracking-wide uppercase m-0">Video Deliverables</h3>
-          <button type="button" onClick={() => appendVideo({ name: "", qty: 1, eventName: "" })}
+          <button type="button" onClick={() => appendVideo({ name: "", qty: "1", eventName: "" })}
             className="px-3.5 py-1.5 border border-[#a10018] rounded-md bg-transparent text-[#a10018] text-[12px] font-semibold font-sans cursor-pointer hover:bg-[#fdf0f2] transition-colors">
             + Add
           </button>
@@ -381,7 +381,7 @@ const packageValue = Math.max(0, totalPackage - discountAmount);
       <div className="mb-7">
         <div className="flex justify-between items-center mb-2.5">
           <h3 className="text-[13px] font-bold text-[#a10018] font-sans tracking-wide uppercase m-0">Photo Deliverables</h3>
-          <button type="button" onClick={() => appendPhoto({ name: "", qty: 1, photosCount: "", eventName: "" })}
+          <button type="button" onClick={() => appendPhoto({ name: "", qty: "1", photosCount: "", eventName: "" })}
             className="px-3.5 py-1.5 border border-[#a10018] rounded-md bg-transparent text-[#a10018] text-[12px] font-semibold font-sans cursor-pointer hover:bg-[#fdf0f2] transition-colors">
             + Add
           </button>
@@ -419,7 +419,7 @@ const packageValue = Math.max(0, totalPackage - discountAmount);
                 </td>
                  <td className="px-2 py-1.5 text-center">
                   <Controller name={`photoDeliverables.${i}.qty`} control={control}
-                    render={({ field }) => <input type="number" min={1} {...field} className="w-14 px-2 py-1.5 border border-[#e0c0c5] rounded-md text-[12px] text-[#2a0008] text-center outline-none focus:border-[#a10018]" />} />
+                    render={({ field }) => <input type="text" {...field} className="w-14 px-2 py-1.5 border border-[#e0c0c5] rounded-md text-[12px] text-[#2a0008] text-center outline-none focus:border-[#a10018]" />} />
                 </td>
                 <td className="text-center">
                   <button type="button" onClick={() => removePhoto(i)} className="text-[#b08090] hover:text-[#a10018] text-lg bg-transparent border-none cursor-pointer">×</button>
@@ -437,11 +437,11 @@ const packageValue = Math.max(0, totalPackage - discountAmount);
         <div className="grid grid-cols-2 gap-x-5 mb-5">
           <Field label="Total Package (₹)">
             <Controller name="totalPackage" control={control}
-              render={({ field }) => <input type="number" {...field} className={`${inputCls} font-semibold`} placeholder="e.g. 751000" />} />
+              render={({ field }) => <input type="text" {...field} className={`${inputCls} font-semibold`} placeholder="e.g. 751000" />} />
           </Field>
           <Field label="Discount (%)">
             <Controller name="discount_percentage" control={control}
-              render={({ field }) => <input type="number" {...field} className={inputCls} placeholder="e.g. 10" />} />
+              render={({ field }) => <input type="text" {...field} className={inputCls} placeholder="e.g. 10" />} />
           </Field>
         </div>
         <div className="bg-white border-[1.5px] border-[#f5c6ce] rounded-xl p-5 space-y-3">
@@ -517,7 +517,7 @@ export default function CustomerForm({ onSaved, editData }: { onSaved?: () => vo
     return isNaN(dt.getTime()) ? "" : dt.toISOString().slice(0, 10);
   };
 
-  const { control, handleSubmit, trigger, watch, setValue, formState: { errors } } = useForm<FormValues>({
+  const { control, handleSubmit, trigger, watch, setValue, formState: { errors } } = useForm<FormValues, any, FormValues>({
     defaultValues: editData ? {
       customerName:      editData.customerName ?? "",
       eventType:         editData.eventType ?? "",
@@ -526,28 +526,32 @@ export default function CustomerForm({ onSaved, editData }: { onSaved?: () => vo
       brideName:         editData.brideName ?? "",
       groomName:         editData.groomName ?? "",
       notes:             editData.notes ?? "",
-      events:            editData.events?.map(ev => ({
-        ...ev,
-        eventName:     eventNameOptions.includes(ev.eventName as typeof eventNameOptions[number]) ? ev.eventName : "Other",
+      events:            (editData.events?.map(ev => ({
+        eventName:       eventNameOptions.includes(ev.eventName as typeof eventNameOptions[number]) ? ev.eventName : "Other",
         customEventName: eventNameOptions.includes(ev.eventName as typeof eventNameOptions[number]) ? "" : (ev.eventName ?? ""),
-        date:          toDateInput(ev.date),
-        crowdStrength: ev.crowdStrength ?? "",
-        services:      ev.services ?? [{ service: "CANDID PHOTOGRAPHY", cameras: 1 }],
-      })) ?? [{ eventName: "", customEventName: "", venueName: "", venueLocation: "", date: "", startTime: "", endTime: "", crowdStrength: "", services: [{ service: "CANDID PHOTOGRAPHY", cameras: 1 }] }],
-      videoDeliverables: editData.videoDeliverables ?? [{ name: "TRADITIONAL VIDEO", qty: 1, eventName: "" }],
-      photoDeliverables: editData.photoDeliverables ?? [{ name: "WEDDING ALBUM", qty: 1, photosCount: "", eventName: "" }],
-      totalPackage:      editData.totalPackage ?? "",
+        venueName:       ev.venueName ?? "",
+        venueLocation:   ev.venueLocation ?? "",
+        date:            toDateInput(ev.date),
+        startTime:       ev.startTime ?? "",
+        endTime:         ev.endTime ?? "",
+        crowdStrength:   String(ev.crowdStrength ?? ""),
+        services:        (ev.services ?? [{ service: "CANDID PHOTOGRAPHY", cameras: 1 }]).map(s => ({ service: s.service, cameras: String(s.cameras ?? "1") })),
+      })) ?? [{ eventName: "", customEventName: "", venueName: "", venueLocation: "", date: "", startTime: "", endTime: "", crowdStrength: "", services: [{ service: "CANDID PHOTOGRAPHY", cameras: "1" }] }]) as FormValues["events"],
+      videoDeliverables: (editData.videoDeliverables ?? [{ name: "TRADITIONAL VIDEO", qty: 1, eventName: "" }]).map(v => ({ ...v, qty: String(v.qty ?? "1") })),
+      photoDeliverables: (editData.photoDeliverables ?? [{ name: "WEDDING ALBUM", qty: 1, photosCount: "", eventName: "" }]).map(p => ({ ...p, qty: String(p.qty ?? "1"), photosCount: String(p.photosCount ?? "") })),
+      totalPackage:      String(editData.totalPackage ?? ""),
       discount_percentage:
-        editData.discount_percentage ??
-        ((Number(editData.totalPackage) || 0) > 0
-          ? ((Number(editData.discount) || 0) / Number(editData.totalPackage)) * 100
-          : ""),
+        editData.discount_percentage != null
+          ? String(editData.discount_percentage)
+          : ((Number(editData.totalPackage) || 0) > 0
+            ? String(((Number(editData.discount) || 0) / Number(editData.totalPackage)) * 100)
+            : ""),
     } : {
       customerName: "", eventType: "", eventDate: "", location: "",
       brideName: "", groomName: "", notes: "",
-      events: [{ eventName: "", customEventName: "", venueName: "", venueLocation: "", date: "", startTime: "", endTime: "", crowdStrength: "", services: [{ service: "CANDID PHOTOGRAPHY", cameras: 1 }] }],
-      videoDeliverables: [{ name: "TRADITIONAL VIDEO", qty: 1, eventName: "" }],
-      photoDeliverables: [{ name: "WEDDING ALBUM", qty: 1, photosCount: "", eventName: "" }],
+      events: [{ eventName: "", customEventName: "", venueName: "", venueLocation: "", date: "", startTime: "", endTime: "", crowdStrength: "", services: [{ service: "CANDID PHOTOGRAPHY", cameras: "1" }] }],
+      videoDeliverables: [{ name: "TRADITIONAL VIDEO", qty: "1", eventName: "" }],
+      photoDeliverables: [{ name: "WEDDING ALBUM", qty: "1", photosCount: "", eventName: "" }],
       totalPackage: "", discount_percentage: "",
     }
   });
