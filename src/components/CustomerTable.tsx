@@ -123,7 +123,7 @@ export default function CustomerTable({ onEdit }: TableProps) {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareTarget, setShareTarget] = useState<Row | null>(null);
   const [dialogMode, setDialogMode] = useState<"share" | "preview">("share");
-  const [selectedTemplateId, setSelectedTemplateId] = useState<"template1" | "template2">("template1");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<"template1" | "template2" | "template3">("template1");
   const [shareLink, setShareLink] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -138,12 +138,14 @@ export default function CustomerTable({ onEdit }: TableProps) {
 
   useEffect(() => { load(); }, []);
 
-  const normalizeTemplateId = (rawTemplateId?: string | number): "template1" | "template2" => {
+  const normalizeTemplateId = (rawTemplateId?: string | number): "template1" | "template2" | "template3" => {
     const normalized = String(rawTemplateId ?? "").trim().toLowerCase();
-    return normalized === "2" || normalized === "template2" ? "template2" : "template1";
+    if (normalized === "2" || normalized === "template2") return "template2";
+    if (normalized === "3" || normalized === "template3") return "template3";
+    return "template1";
   };
 
-  const buildPreviewLink = (c: Row, templateId: "template1" | "template2") => {
+  const buildPreviewLink = (c: Row, templateId: "template1" | "template2" | "template3") => {
     if (!c._id) return "";
     return `${window.location.origin}/preview/${c._id}?templateId=${encodeURIComponent(templateId)}`;
   };
@@ -169,7 +171,7 @@ export default function CustomerTable({ onEdit }: TableProps) {
   };
 
   const updateTemplateSelection = (value: string) => {
-    const template = value === "template2" ? "template2" : "template1";
+    const template = value === "template2" ? "template2" : value === "template3" ? "template3" : "template1";
     setSelectedTemplateId(template);
     if (shareTarget) {
       setShareLink(buildPreviewLink(shareTarget, template));
@@ -371,8 +373,9 @@ const handleShare = async (c: Row) => {
                   <SelectValue placeholder="Select template" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="template1">Template 1</SelectItem>
-                  <SelectItem value="template2">Template 2</SelectItem>
+                  <SelectItem value="template1">Christian</SelectItem>
+                  <SelectItem value="template2">Hindu</SelectItem>
+                  <SelectItem value="template3">Muslim</SelectItem>
                 </SelectContent>
               </Select>
             </div>
