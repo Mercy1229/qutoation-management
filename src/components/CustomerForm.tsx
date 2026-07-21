@@ -510,6 +510,7 @@ const packageValue = Math.max(0, totalPackage - discountAmount);
 export default function CustomerForm({ onSaved, editData }: { onSaved?: () => void; editData?: EditData }) {
   const isEdit = Boolean(editData?._id);
   const [currentStep, setCurrentStep] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
 
   const toDateInput = (d?: string) => {
     if (!d) return "";
@@ -578,6 +579,8 @@ export default function CustomerForm({ onSaved, editData }: { onSaved?: () => vo
   const handleBack = () => setCurrentStep(s => Math.max(s - 1, 0));
 
   const onSubmit = async (data: FormValues) => {
+    if (isSaving) return;
+    setIsSaving(true);
     try {
       const totalPackageNum = Math.max(0, Number(data.totalPackage) || 0);
       const discountPercentageNum = Math.max(0, Number(data.discount_percentage) || 0);
@@ -618,6 +621,8 @@ export default function CustomerForm({ onSaved, editData }: { onSaved?: () => vo
       alert(isEdit ? "Quotation updated successfully!" : "Quotation saved successfully!");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Error saving quotation");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -665,9 +670,26 @@ export default function CustomerForm({ onSaved, editData }: { onSaved?: () => vo
             </button>
 
             {/* {currentStep < steps.length - 1 ? ( */}
-              <button type="button" onClick={handlePrimaryAction}
-                className="min-w-[110px] px-3.5 py-2 rounded-lg border-[1.5px] border-[#a10018] bg-[#a10018] text-white font-sans font-semibold text-[12px] tracking-wide uppercase cursor-pointer hover:bg-[#8a0014] transition-colors">
-                {currentStep === steps.length - 1 ? "Save Quotation" : "Next"}
+              <button
+                type="button"
+                onClick={handlePrimaryAction}
+                disabled={currentStep === steps.length - 1 && isSaving}
+                className={`min-w-[110px] px-3.5 py-2 rounded-lg border-[1.5px] border-[#a10018] font-sans font-semibold text-[12px] tracking-wide uppercase transition-colors flex items-center justify-center gap-2
+                  ${currentStep === steps.length - 1 && isSaving
+                    ? "bg-[#c4637a] border-[#c4637a] text-white cursor-not-allowed"
+                    : "bg-[#a10018] text-white cursor-pointer hover:bg-[#8a0014]"}`}
+              >
+                {currentStep === steps.length - 1 && isSaving ? (
+                  <>
+                    <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    </svg>
+                    Saving...
+                  </>
+                ) : (
+                  currentStep === steps.length - 1 ? "Save Quotation" : "Next"
+                )}
               </button>
             {/* )} */}
           </div>
