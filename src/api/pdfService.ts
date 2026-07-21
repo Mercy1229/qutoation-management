@@ -78,7 +78,9 @@ export async function fetchCustomerById(id: string) {
 
 function normalizeTemplateId(templateId?: string | number) {
   const normalized = String(templateId ?? "").trim().toLowerCase();
-  return normalized === "2" || normalized === "template2" ? "template2" : "template1";
+  if (normalized === "2" || normalized === "template2") return "template2";
+  if (normalized === "3" || normalized === "template3") return "template3";
+  return "template1";
 }
 
 export async function previewQuotation(data: CustomerData, templateId?: string | number) {
